@@ -60,7 +60,8 @@ let elements: {
   windEl: HTMLElement | null
   timerBar: HTMLElement | null
   elevationInput: HTMLInputElement | null
-  windageInput: HTMLInputElement | null
+  windageLeftInput: HTMLInputElement | null
+  windageRightInput: HTMLInputElement | null
   feedback: HTMLElement | null
   roundEl: HTMLElement | null
   hitsEl: HTMLElement | null
@@ -78,7 +79,8 @@ let elements: {
   windEl: null,
   timerBar: null,
   elevationInput: null,
-  windageInput: null,
+  windageLeftInput: null,
+  windageRightInput: null,
   feedback: null,
   roundEl: null,
   hitsEl: null,
@@ -99,7 +101,8 @@ export function initDrill(): void {
     windEl: document.getElementById('drill-wind'),
     timerBar: document.getElementById('timer-bar'),
     elevationInput: document.getElementById('drill-elevation') as HTMLInputElement,
-    windageInput: document.getElementById('drill-windage') as HTMLInputElement,
+    windageLeftInput: document.getElementById('drill-windage-left') as HTMLInputElement,
+    windageRightInput: document.getElementById('drill-windage-right') as HTMLInputElement,
     feedback: document.getElementById('drill-feedback'),
     roundEl: document.getElementById('drill-round'),
     hitsEl: document.getElementById('drill-hits'),
@@ -116,7 +119,8 @@ export function initDrill(): void {
   document.getElementById('restart-drill-btn')?.addEventListener('click', startDrill)
 
   elements.elevationInput?.addEventListener('keydown', handleInputKeydown)
-  elements.windageInput?.addEventListener('keydown', handleInputKeydown)
+  elements.windageLeftInput?.addEventListener('keydown', handleInputKeydown)
+  elements.windageRightInput?.addEventListener('keydown', handleInputKeydown)
 }
 
 function handleInputKeydown(e: KeyboardEvent): void {
@@ -247,10 +251,15 @@ function beginRound(): void {
     elements.elevationInput.disabled = false
     elements.elevationInput.classList.remove('error')
   }
-  if (elements.windageInput) {
-    elements.windageInput.value = ''
-    elements.windageInput.disabled = false
-    elements.windageInput.classList.remove('error')
+  if (elements.windageLeftInput) {
+    elements.windageLeftInput.value = ''
+    elements.windageLeftInput.disabled = false
+    elements.windageLeftInput.classList.remove('error')
+  }
+  if (elements.windageRightInput) {
+    elements.windageRightInput.value = ''
+    elements.windageRightInput.disabled = false
+    elements.windageRightInput.classList.remove('error')
   }
 
   // Show target visual
@@ -328,7 +337,8 @@ function handleTimeout(): void {
 
   // Disable inputs, wait for Enter to continue
   if (elements.elevationInput) elements.elevationInput.disabled = true
-  if (elements.windageInput) elements.windageInput.disabled = true
+  if (elements.windageLeftInput) elements.windageLeftInput.disabled = true
+  if (elements.windageRightInput) elements.windageRightInput.disabled = true
   waitForContinue()
 }
 
@@ -336,7 +346,8 @@ function submitAnswer(): void {
   if (!session || !session.isActive) return
 
   const elevationValue = elements.elevationInput?.value.trim()
-  const windageValue = elements.windageInput?.value.trim()
+  const windageLeftValue = elements.windageLeftInput?.value.trim()
+  const windageRightValue = elements.windageRightInput?.value.trim()
 
   // Need at least elevation to submit
   if (!elevationValue) {
@@ -346,7 +357,6 @@ function submitAnswer(): void {
   }
 
   const userElevation = parseFloat(elevationValue)
-  const userWindage = parseFloat(windageValue || '0')
 
   if (isNaN(userElevation)) {
     elements.elevationInput?.classList.add('error')
@@ -354,11 +364,10 @@ function submitAnswer(): void {
     return
   }
 
-  if (windageValue && isNaN(userWindage)) {
-    elements.windageInput?.classList.add('error')
-    setTimeout(() => elements.windageInput?.classList.remove('error'), 300)
-    return
-  }
+  // Combine windage: left is negative, right is positive
+  const leftVal = parseFloat(windageLeftValue || '0') || 0
+  const rightVal = parseFloat(windageRightValue || '0') || 0
+  const userWindage = rightVal - leftVal
 
   stopTimer()
   session.isActive = false
@@ -384,7 +393,8 @@ function submitAnswer(): void {
 
   // Disable inputs, wait for Enter to continue
   if (elements.elevationInput) elements.elevationInput.disabled = true
-  if (elements.windageInput) elements.windageInput.disabled = true
+  if (elements.windageLeftInput) elements.windageLeftInput.disabled = true
+  if (elements.windageRightInput) elements.windageRightInput.disabled = true
   waitForContinue()
 }
 
@@ -637,9 +647,13 @@ function endDrill(): void {
     elements.elevationInput.value = ''
     elements.elevationInput.disabled = true
   }
-  if (elements.windageInput) {
-    elements.windageInput.value = ''
-    elements.windageInput.disabled = true
+  if (elements.windageLeftInput) {
+    elements.windageLeftInput.value = ''
+    elements.windageLeftInput.disabled = true
+  }
+  if (elements.windageRightInput) {
+    elements.windageRightInput.value = ''
+    elements.windageRightInput.disabled = true
   }
   if (elements.timerBar) {
     elements.timerBar.style.width = '0%'
@@ -698,9 +712,13 @@ export function resetDrill(): void {
     elements.elevationInput.value = ''
     elements.elevationInput.disabled = true
   }
-  if (elements.windageInput) {
-    elements.windageInput.value = ''
-    elements.windageInput.disabled = true
+  if (elements.windageLeftInput) {
+    elements.windageLeftInput.value = ''
+    elements.windageLeftInput.disabled = true
+  }
+  if (elements.windageRightInput) {
+    elements.windageRightInput.value = ''
+    elements.windageRightInput.disabled = true
   }
   if (elements.timerBar) {
     elements.timerBar.style.width = '100%'
