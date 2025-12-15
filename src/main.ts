@@ -1,4 +1,5 @@
 import { solve, angleToInches, inchesToAngle } from './ballistics'
+import { DEFAULT_ENVIRONMENT } from './scenarios'
 import { getReticle } from './reticles'
 import { generateScenario, formatWind, formatDistance } from './scenarios'
 import type { Scenario, ShotResult } from './types'
@@ -21,12 +22,15 @@ import {
   updateScenarioInfo,
   type ControlState,
 } from './ui/controls'
+import { initDrill, resetDrill } from './drill'
 
 // Application state
 let canvasState: CanvasState | null = null
 let controlState: ControlState
 let currentScenario: Scenario | null = null
 let lastResult: ShotResult | null = null
+let currentMode: 'scope' | 'drill' = 'scope'
+let dopeCardVisible = false
 
 function init(): void {
   // Initialize canvas
@@ -47,11 +51,88 @@ function init(): void {
     setReticle(canvasState, reticle)
   }
 
+  // Initialize drill mode
+  initDrill()
+
   // Bind event listeners
   bindEvents()
+  bindModeSwitch()
 
   // Generate first scenario
   newScenario()
+}
+
+function setMode(mode: 'scope' | 'drill'): void {
+  if (mode === currentMode) return
+  currentMode = mode
+
+  const scopeView = document.getElementById('scope-view')
+  const drillView = document.getElementById('drill-view')
+  const scopeBtn = document.getElementById('mode-scope')
+  const drillBtn = document.getElementById('mode-drill')
+  const footer = document.getElementById('result-footer')
+  const magControl = document.getElementById('mag-control')
+  const knownDistanceToggle = document.getElementById('known-distance-toggle')
+  const scopeSelect = document.getElementById('scope-select')
+
+  if (mode === 'scope') {
+    scopeView?.classList.remove('hidden')
+    drillView?.classList.add('hidden')
+    scopeBtn?.classList.add('active')
+    drillBtn?.classList.remove('active')
+    footer?.classList.remove('hidden')
+    magControl?.classList.remove('hidden')
+    knownDistanceToggle?.classList.remove('hidden')
+    scopeSelect?.classList.remove('hidden')
+    resetDrill()
+  }
+  else {
+    scopeView?.classList.add('hidden')
+    drillView?.classList.remove('hidden')
+    scopeBtn?.classList.remove('active')
+    drillBtn?.classList.add('active')
+    footer?.classList.add('hidden')
+    magControl?.classList.add('hidden')
+    knownDistanceToggle?.classList.add('hidden')
+    scopeSelect?.classList.add('hidden')
+    resetDrill()
+  }
+}
+
+function bindModeSwitch(): void {
+  document.getElementById('mode-scope')?.addEventListener('click', () => setMode('scope'))
+  document.getElementById('mode-drill')?.addEventListener('click', () => setMode('drill'))
+}
+
+function toggleDopeCard(): void {
+  dopeCardVisible = !dopeCardVisible
+  const card = document.getElementById('dope-card')
+
+  if (dopeCardVisible) {
+    updateDopeTable()
+    card?.classList.remove('hidden')
+  }
+  else {
+    card?.classList.add('hidden')
+  }
+}
+
+function updateDopeTable(): void {
+  const table = document.getElementById('dope-table')
+  if (!table) return
+
+  const rifle = controlState.selectedRifle
+
+  let html = '<thead><tr><th>Dist</th><th>Mils</th></tr></thead><tbody>'
+
+  for (let dist = 100; dist <= 1500; dist += 100) {
+    const solution = solve(rifle, dist, 0, [], DEFAULT_ENVIRONMENT)
+    const dropMils = -solution.dropMils
+    html += '<tr><td>' + dist + '</td><td>' + dropMils.toFixed(1) + '</td></tr>'
+  }
+
+  html += '</tbody>'
+  table.innerHTML = html
 }
 
 function bindEvents(): void {
@@ -177,6 +258,11 @@ function bindEvents(): void {
           takeShot()
         }
         break
+      case 'h':
+      case '?':
+        e.preventDefault()
+        toggleDopeCard()
+        break
     }
   })
 
@@ -247,7 +333,7 @@ function newScenario(): void {
   // Generate new scenario
   currentScenario = generateScenario({
     minDistance: 200,
-    maxDistance: 800,
+    maxDistance: 1500,
     distanceKnown: isKnownDistanceMode(),
     maxWindSpeed: 12,
     allowAngles: true,

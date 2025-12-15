@@ -15,14 +15,18 @@
       <div class="header-controls">
         <select id="rifle-select"></select>
         <select id="scope-select"></select>
-        <div class="mag-control">
+        <div class="mag-control" id="mag-control">
           <input type="range" id="magnification" min="1" max="25" value="10">
           <span id="mag-value">10x</span>
         </div>
-        <label class="toggle">
+        <label class="toggle" id="known-distance-toggle">
           <input type="checkbox" id="known-distance" checked>
           <span class="toggle-label">Known Distance</span>
         </label>
+        <div class="mode-switch">
+          <button id="mode-scope" class="mode-btn active">Scope</button>
+          <button id="mode-drill" class="mode-btn">Drill</button>
+        </div>
       </div>
     </header>
 
@@ -44,6 +48,89 @@
 
       <input type="hidden" id="elevation" value="0">
       <input type="hidden" id="windage" value="0">
+
+      <aside id="dope-card" class="hidden">
+        <h3>Drop Table</h3>
+        <table id="dope-table"></table>
+        <div class="dope-hint">Press H to hide</div>
+      </aside>
+
+      <section id="drill-view" class="hidden">
+        <div class="drill-container">
+          <div class="drill-prompt">
+            <div class="drill-rifle" id="drill-rifle"></div>
+            <div class="drill-scenario">
+              <span class="drill-target-name" id="drill-target"></span>
+              <span class="drill-distance" id="drill-distance"></span>
+              <span class="drill-wind" id="drill-wind"></span>
+            </div>
+            <div class="drill-target-visual" id="drill-target-visual">
+              <div class="target-outline" id="target-outline">
+                <div class="target-impact" id="target-impact"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="drill-timer">
+            <div class="timer-bar" id="timer-bar"></div>
+          </div>
+
+          <div class="drill-input-area">
+            <div class="drill-input-group">
+              <input
+                type="text"
+                id="drill-elevation"
+                class="drill-input"
+                placeholder="0.0"
+                autocomplete="off"
+                inputmode="decimal"
+              >
+              <span class="drill-unit">up</span>
+            </div>
+            <div class="drill-input-group">
+              <input
+                type="text"
+                id="drill-windage"
+                class="drill-input"
+                placeholder="0.0"
+                autocomplete="off"
+                inputmode="decimal"
+              >
+              <span class="drill-unit">right</span>
+            </div>
+          </div>
+
+          <div class="drill-feedback" id="drill-feedback"></div>
+
+          <div class="drill-status" id="drill-status">
+            <span id="drill-round">Round 1 / 10</span>
+            <span id="drill-hits">Hits: 0</span>
+          </div>
+
+          <div class="drill-start" id="drill-start">
+            <button id="start-drill-btn" class="start-btn">Start Drill</button>
+          </div>
+
+          <div class="drill-summary hidden" id="drill-summary">
+            <h2>Drill Complete</h2>
+            <div class="summary-stats">
+              <div class="stat">
+                <span class="stat-value" id="summary-hits">0/10</span>
+                <span class="stat-label">Hits</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="summary-avg-time">0.0s</span>
+                <span class="stat-label">Avg Time</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="summary-best-time">0.0s</span>
+                <span class="stat-label">Best Time</span>
+              </div>
+            </div>
+            <button id="restart-drill-btn" class="start-btn">Run Again</button>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer id="result-footer">
