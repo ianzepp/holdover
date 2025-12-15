@@ -138,7 +138,9 @@ export function updateParallax(holdX: number, holdY: number): void {
     if (el) {
       const offsetX = -holdX * pixelsPerMil * layer.factor
       const offsetY = -holdY * pixelsPerMil * layer.factor
-      el.style.transform = `translate(${offsetX}px, ${offsetY}px)`
+      // Use CSS custom properties so animations can combine with parallax
+      el.style.setProperty('--parallax-x', `${offsetX}px`)
+      el.style.setProperty('--parallax-y', `${offsetY}px`)
     }
   }
 }

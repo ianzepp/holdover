@@ -133,8 +133,9 @@ main {
   right: -20%;
   bottom: 0;
   height: 100%;
-  transition: transform 0.05s ease-out;
   pointer-events: none;
+  --parallax-x: 0px;
+  --parallax-y: 0px;
 }
 
 /* Sky layer - gradient background */
@@ -147,24 +148,53 @@ main {
     #F5F5DC 100%
   );
   height: 100%;
+  animation: sway-sky 12s ease-in-out infinite;
+}
+
+@keyframes sway-sky {
+  0%, 100% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(0px); }
+  50% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(1px); }
 }
 
 /* Mountains - far background */
 #layer-mountains {
   bottom: 25%;
   height: 50%;
+  animation: sway-slow 8s ease-in-out infinite;
 }
 
 /* Hills - mid-ground */
 #layer-hills {
   bottom: 20%;
   height: 45%;
+  animation: sway-medium 6s ease-in-out infinite;
+  animation-delay: -2s;
 }
 
 /* Trees - closer mid-ground */
 #layer-trees {
   bottom: 15%;
   height: 40%;
+  animation: sway-trees 4s ease-in-out infinite;
+  animation-delay: -1s;
+}
+
+/* Layer sway animations - use translate3d for parallax offset + animation sway */
+@keyframes sway-slow {
+  0%, 100% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(0px); }
+  50% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(3px); }
+}
+
+@keyframes sway-medium {
+  0%, 100% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(0px); }
+  33% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(-4px); }
+  66% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(4px); }
+}
+
+@keyframes sway-trees {
+  0%, 100% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(0px) rotate(0deg); }
+  25% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(-5px) rotate(-0.3deg); }
+  75% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(5px) rotate(0.3deg); }
 }
 
 /* Target layer */
@@ -176,18 +206,39 @@ main {
   justify-content: center;
   left: 0;
   right: 0;
+  animation: sway-target 5s ease-in-out infinite;
+}
+
+@keyframes sway-target {
+  0%, 100% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(0px); }
+  30% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(-3px); }
+  70% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(3px); }
 }
 
 #scope-target {
   position: absolute;
   bottom: 25%;
   transform-origin: center bottom;
+  animation: target-waggle 2.5s ease-in-out infinite;
+}
+
+@keyframes target-waggle {
+  0%, 100% { transform: rotate(-1deg); }
+  50% { transform: rotate(1deg); }
 }
 
 /* Grass - foreground */
 #layer-grass {
   bottom: 0;
   height: 25%;
+  animation: sway-grass 3s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+@keyframes sway-grass {
+  0%, 100% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(0px) skewX(0deg); }
+  25% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(-2px) skewX(-1deg); }
+  75% { transform: translate3d(var(--parallax-x), var(--parallax-y), 0) translateX(2px) skewX(1deg); }
 }
 
 /* Reticle overlay */
