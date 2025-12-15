@@ -380,6 +380,13 @@ main {
   background: #3a3a3a;
   border: 2px solid #666;
   border-radius: 2px;
+  animation: waggle 2s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+@keyframes waggle {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
 }
 
 .target-impact {
