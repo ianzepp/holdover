@@ -32,7 +32,22 @@
 
     <main>
       <section id="scope-view">
-        <canvas id="reticle-canvas"></canvas>
+        <div id="scope-frame">
+          <div id="scope-world">
+            <!-- Parallax layers - back to front -->
+            <div class="parallax-layer" id="layer-sky"></div>
+            <div class="parallax-layer" id="layer-mountains"></div>
+            <div class="parallax-layer" id="layer-hills"></div>
+            <div class="parallax-layer" id="layer-trees"></div>
+            <div class="parallax-layer" id="layer-target">
+              <div id="scope-target"></div>
+            </div>
+            <div class="parallax-layer" id="layer-grass"></div>
+          </div>
+          <div id="scope-reticle"></div>
+          <div id="scope-vignette"></div>
+          <div id="scope-impact"></div>
+        </div>
         <div id="overlay-top">
           <div id="overlay-distance"></div>
           <div id="overlay-hold"></div>

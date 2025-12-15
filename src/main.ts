@@ -4,13 +4,12 @@ import { getReticle } from './reticles'
 import { generateScenario, formatWind, formatDistance } from './scenarios'
 import type { Scenario, ShotResult } from './types'
 import {
-  initCanvas,
-  resizeCanvas,
-  setMagnification,
-  setReticle,
-  render,
-  type CanvasState,
-} from './ui/canvas'
+  initScope,
+  setMagnification as setScopeMagnification,
+  setReticle as setScopeReticle,
+  renderScope,
+  clearImpact,
+} from './ui/scope'
 import {
   initControls,
   populateRifleSelect,
@@ -25,7 +24,7 @@ import {
 import { initDrill, resetDrill } from './drill'
 
 // Application state
-let canvasState: CanvasState | null = null
+let scopeReady = false
 let controlState: ControlState
 let currentScenario: Scenario | null = null
 let lastResult: ShotResult | null = null
@@ -33,10 +32,10 @@ let currentMode: 'scope' | 'drill' = 'scope'
 let dopeCardVisible = false
 
 function init(): void {
-  // Initialize canvas
-  canvasState = initCanvas('reticle-canvas')
-  if (!canvasState) {
-    console.error('Failed to initialize canvas')
+  // Initialize scope view
+  scopeReady = initScope()
+  if (!scopeReady) {
+    console.error('Failed to initialize scope')
     return
   }
 
@@ -48,7 +47,7 @@ function init(): void {
   // Set initial reticle
   const reticle = getReticle(controlState.selectedScope.reticleId)
   if (reticle) {
-    setReticle(canvasState, reticle)
+    setScopeReticle(reticle)
   }
 
   // Initialize drill mode
@@ -149,11 +148,11 @@ function bindEvents(): void {
   const scopeSelect = document.getElementById('scope-select') as HTMLSelectElement
   scopeSelect?.addEventListener('change', () => {
     const scope = getScopeByName(scopeSelect.value)
-    if (scope && canvasState) {
+    if (scope && scopeReady) {
       controlState.selectedScope = scope
       const reticle = getReticle(scope.reticleId)
       if (reticle) {
-        setReticle(canvasState, reticle)
+        setScopeReticle(reticle)
         renderCurrentState()
       }
     }
@@ -168,8 +167,8 @@ function bindEvents(): void {
     if (magValue) {
       magValue.textContent = `${mag}x`
     }
-    if (canvasState) {
-      setMagnification(canvasState, mag)
+    if (scopeReady) {
+      setScopeMagnification(mag)
       renderCurrentState()
     }
   })
@@ -284,8 +283,7 @@ function bindEvents(): void {
 
   // Handle window resize
   window.addEventListener('resize', () => {
-    if (canvasState) {
-      resizeCanvas(canvasState)
+    if (scopeReady) {
       renderCurrentState()
     }
   })
@@ -373,7 +371,7 @@ function updateScenarioDisplay(): void {
 }
 
 function takeShot(): void {
-  if (!currentScenario || !canvasState) return
+  if (!currentScenario || !scopeReady) return
 
   const holdInput = readHoldInput()
   const { target, angleOfFireDegrees, winds, environment } = currentScenario
@@ -496,7 +494,7 @@ function renderCurrentState(
   impactY?: number,
   isHit?: boolean
 ): void {
-  if (!canvasState || !currentScenario) return
+  if (!scopeReady || !currentScenario) return
 
   const impact =
     impactX !== undefined && impactY !== undefined && isHit !== undefined
@@ -504,19 +502,14 @@ function renderCurrentState(
       : undefined
 
   // Read current hold values to offset target position
-  // When you hold UP (positive elevation), target appears LOWER (you're aiming above it)
-  // When you hold RIGHT (positive windage), target appears LEFT (you're aiming right of it)
   const holdInput = readHoldInput()
-  const targetOffsetX = -holdInput.windageValue // Negative because hold right = target appears left
-  const targetOffsetY = -holdInput.elevationValue // Negative because hold up = target appears lower
 
-  render(
-    canvasState,
+  renderScope(
     currentScenario.target,
     currentScenario.winds,
     impact,
-    targetOffsetX,
-    targetOffsetY
+    holdInput.windageValue,
+    holdInput.elevationValue
   )
 }
 
