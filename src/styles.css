@@ -1,0 +1,218 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #1a1a1a;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  background: #252525;
+  border-bottom: 1px solid #333;
+}
+
+.header-title h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-controls select {
+  padding: 0.4rem 0.6rem;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.8rem;
+}
+
+.mag-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mag-control input[type="range"] {
+  width: 80px;
+}
+
+.mag-control span {
+  font-size: 0.8rem;
+  color: #888;
+  min-width: 30px;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding-left: 1rem;
+  border-left: 1px solid #444;
+}
+
+.toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.toggle-label {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.toggle input:checked + .toggle-label {
+  color: #fff;
+}
+
+main {
+  display: flex;
+  flex: 1;
+  padding: 1rem;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#scope-view {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0d0d0d;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#reticle-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+#overlay-top,
+#overlay-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  padding: 1rem 1.5rem;
+  pointer-events: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+#overlay-top {
+  top: 0;
+}
+
+#overlay-bottom {
+  bottom: 0;
+  align-items: flex-end;
+}
+
+#overlay-distance {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+}
+
+#overlay-hold {
+  font-size: 1.25rem;
+  font-family: monospace;
+  color: #ff4444;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+}
+
+#overlay-scenario {
+  font-size: 0.9rem;
+  color: #aaa;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+}
+
+#overlay-scenario span {
+  margin-right: 1.5rem;
+}
+
+#overlay-wind {
+  font-size: 0.85rem;
+  color: #aaa;
+  text-align: right;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+  line-height: 1.5;
+}
+
+#result-footer {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 0.75rem 1.5rem;
+  background: #252525;
+  border-top: 1px solid #333;
+}
+
+#result-status {
+  font-size: 1.25rem;
+  font-weight: 700;
+  min-width: 60px;
+}
+
+#result-status.hit {
+  color: #4a7c59;
+}
+
+#result-status.miss {
+  color: #c44;
+}
+
+#result-details {
+  flex: 1;
+  display: flex;
+  gap: 2rem;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+#result-details > span {
+  white-space: nowrap;
+}
+
+.result-hint {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+.hit {
+  color: #4a7c59;
+}
+
+.miss {
+  color: #c44;
+}

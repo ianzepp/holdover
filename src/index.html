@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Holdover - Precision Rifle Training</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="header-title">
+        <h1>Holdover</h1>
+      </div>
+      <div class="header-controls">
+        <select id="rifle-select"></select>
+        <select id="scope-select"></select>
+        <div class="mag-control">
+          <input type="range" id="magnification" min="1" max="25" value="10">
+          <span id="mag-value">10x</span>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="known-distance" checked>
+          <span class="toggle-label">Known Distance</span>
+        </label>
+      </div>
+    </header>
+
+    <main>
+      <section id="scope-view">
+        <canvas id="reticle-canvas"></canvas>
+        <div id="overlay-top">
+          <div id="overlay-distance"></div>
+          <div id="overlay-hold"></div>
+        </div>
+        <div id="overlay-bottom">
+          <div id="overlay-scenario">
+            <span id="target-info"></span>
+            <span id="angle-info"></span>
+          </div>
+          <div id="overlay-wind"></div>
+        </div>
+      </section>
+
+      <input type="hidden" id="elevation" value="0">
+      <input type="hidden" id="windage" value="0">
+    </main>
+
+    <footer id="result-footer">
+      <div id="result-status"></div>
+      <div id="result-details"></div>
+      <div class="result-hint"></div>
+    </footer>
+  </div>
+
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>
