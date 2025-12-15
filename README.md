@@ -9,110 +9,141 @@ Training tool for PRS (Precision Rifle Series) shooters who lack access to long-
 - **Range estimation** - Using mil/MOA reticles to determine distance based on known target sizes
 - **Wind calling** - Reading multiple wind indicators at different distances and synthesizing a hold
 - **Holdover calculation** - Applying the correct reticle hold for drop and drift without adjusting turrets
-- **Reticle familiarity** - Building speed with different reticle patterns (mil-dot, Tremor, H59, etc.)
+- **Reticle familiarity** - Building speed with different reticle patterns
 
-## Core Concepts
+## Quick Start
 
-### Why Holdover?
-
-PRS stages throw multiple targets at varied distances under time pressure. Dialing turrets for each target is too slow. Competitors need to:
-
-1. Range the target (or be given distance)
-2. Read wind conditions
-3. Calculate the hold
-4. Place the correct reticle mark on target
-5. Send it
-
-This tool trains steps 1-4 in a repeatable way.
-
-### Training Loop
-
-1. Set rifle zero once (e.g., 100 yard zero)
-2. Scenario presents: target, wind indicators at multiple depths, terrain angle
-3. Estimate range via mil-ranging (or given for wind-focused drills)
-4. Calculate hold: X mils up, Y mils left/right
-5. Place reticle mark on target, take the shot
-6. Feedback shows true POI vs your hold, with breakdown of errors
-
-### Mil-Ranging Formula
-
-```
-(Target size in inches / mil reading) * 27.78 = range in yards
+```bash
+bun install
+bun run dev
 ```
 
-Example: IPSC torso (18" wide) reads 1.2 mils = 416 yards
+Open http://localhost:5173 in your browser.
 
-## Data Model
+## Controls
 
-### Rifle Profile
-- Caliber
-- Bullet BC (G1/G7)
-- Bullet weight (grains)
-- Muzzle velocity
-- Zero distance
-- Twist rate (for spin drift)
+| Key | Action |
+|-----|--------|
+| W / S | Adjust elevation (0.1 mil per tap) |
+| A / D | Adjust windage (0.1 mil per tap) |
+| Shift + WASD | Coarse adjustment (1.0 mil) |
+| Space | Fire / Next scenario |
+| Hold WASD | Continuous adjustment (~30fps) |
 
-### Scope Profile
-- MOA or MIL
-- Reticle pattern
-- Magnification range
-- FFP (first focal plane)
+## Interface
 
-### Scenario
-- Target type and size
-- True distance
-- Terrain angle (uphill/downhill)
-- Wind vectors at multiple depths (shooter, mid-range, target)
+### Header
+- **Rifle select** - Choose from preset rifle profiles (6.5 CM, .308, 6mm CM, .300 WM)
+- **Scope select** - Choose reticle pattern (Mil-Dot, Horus H59, Tremor3, MOA)
+- **Magnification** - Slider for scope zoom (FFP reticle scales with magnification)
+- **Known Distance** - Toggle to hide distance for ranging practice
 
-### Environment
-- Altitude
-- Temperature
-- Barometric pressure
-- Humidity
+### Scope View
+- **Top-left**: Distance to target (or "Unknown distance" if toggle off)
+- **Top-right**: Current hold values (Elevation / Windage in mils)
+- **Bottom-left**: Wind flags showing direction and relative speed
+- **Bottom-right**: Wind readings at multiple depths
+- **Center**: Target and reticle overlay
+
+### Footer
+- **Before firing**: "SPACE to fire"
+- **After firing**: HIT/MISS status, impact offset, correct hold, your error
+
+## Training Loop
+
+1. Scenario generates with random target, distance, wind, and angle
+2. Read wind flags and numbers to estimate crosswind
+3. Use WASD to adjust your holdover (target moves relative to reticle)
+4. Press SPACE to fire
+5. Review feedback: where you hit vs correct hold
+6. Press SPACE for next scenario
+
+## Mil-Ranging Formula
+
+When distance is unknown, use the reticle to measure the target:
+
+```
+(Target size in inches / mil reading) × 27.78 = range in yards
+```
+
+Example: IPSC torso (18" wide) measures 1.2 mils → 416 yards
 
 ## Reference Target Sizes
 
-| Target | Width/Height |
-|--------|--------------|
-| IPSC A-zone | 6" x 11" |
-| IPSC torso | 18" wide |
-| Half-IPSC | 9" wide |
-| Human head | 6-8" |
-| Deer chest | 16-18" |
-| Vehicle tire | 24-28" |
+| Target | Size |
+|--------|------|
+| IPSC Full | 18" × 30" |
+| IPSC Half | 9" × 15" |
+| IPSC Head | 6" × 8" |
+| Human Silhouette | 18" × 40" |
+| Deer (vitals) | 16" × 16" |
+| Bear (vitals) | 20" × 24" |
+| Vehicle Tire | 26" × 26" |
+| 8" Steel | 8" × 8" |
+| 12" Steel | 12" × 12" |
 
 ## Ballistics Engine
 
-Uses standard G1/G7 drag models to calculate:
-- Bullet drop at distance
-- Time of flight
-- Wind drift (function of crosswind and TOF)
-- Spin drift
-- Coriolis effect (long range)
-- Angle compensation (cosine of incline)
+Point-mass trajectory model with:
+- G1/G7 drag coefficient tables
+- Air density adjustment for altitude/temperature/pressure
+- Angle compensation (cosine correction for uphill/downhill)
+- Wind drift calculation from multiple wind vectors
+- Zero offset calculation
 
-## Roadmap
+**Note**: The ballistics are simplified for training purposes, not match-grade accuracy.
 
-### Phase 1: Functional Trainer
-- Schematic/diagrammatic view
-- Reticle overlay (selectable patterns)
-- Wind indicators at 3-4 depth points
-- Ballistics engine with real calculations
-- Ranging practice mode
-- Holdover practice mode
-- Shot feedback with error breakdown
+## Preset Rifles
 
-### Phase 2: Realistic Scope View
-- Circular scope view with eye relief simulation
-- FFP reticle scaling with magnification
-- Glass quality profiles (edge sharpness, light transmission, chromatic aberration)
-- Mirage/shimmer effects for wind indication
-- Comparison mode for different optic quality levels
+| Profile | BC (G7) | MV | Zero |
+|---------|---------|-----|------|
+| 6.5 Creedmoor 140gr | 0.610 | 2750 fps | 100 yd |
+| .308 Win 175gr | 0.505 | 2600 fps | 100 yd |
+| 6mm Creedmoor 105gr | 0.540 | 3000 fps | 100 yd |
+| .300 Win Mag 190gr | 0.640 | 2900 fps | 100 yd |
+
+## Reticle Patterns
+
+- **Mil-Dot** - Classic mil-dot with 0.5 mil hash marks, extended to -10 mils
+- **Horus H59** - Christmas tree pattern with 0.5 mil hash spacing
+- **Tremor3** - Similar tree pattern, slightly different geometry
+- **MOA Crosshair** - MOA-based with 2 MOA hash marks
+
+All reticles are FFP (first focal plane) - they scale with magnification.
 
 ## Tech Stack
 
 - TypeScript
-- Vite (build tooling)
-- Canvas 2D API (Phase 1)
-- WebGPU (Phase 2, for glass/mirage effects)
-- No framework - vanilla DOM for UI controls
+- Vite (build/dev server)
+- Canvas 2D API
+- No framework - vanilla DOM
+
+## Project Structure
+
+```
+src/
+├── main.ts              # App initialization and event handling
+├── index.html           # Single page with overlays
+├── styles.css           # Dark theme styling
+├── types.ts             # TypeScript interfaces
+├── ballistics/
+│   ├── index.ts         # Solver, unit conversions
+│   └── drag.ts          # G1/G7 drag model calculations
+├── reticles/
+│   └── index.ts         # Reticle pattern definitions
+├── scenarios/
+│   └── index.ts         # Random scenario generation
+└── ui/
+    ├── canvas.ts        # Canvas rendering (reticle, target, wind, impact)
+    └── controls.ts      # UI state and DOM helpers
+```
+
+## Future Ideas
+
+- Realistic circular scope view with eye relief
+- Glass quality simulation (edge distortion, chromatic aberration)
+- Mirage/shimmer effects for wind visualization
+- More accurate wind flag physics (crosswind component)
+- Custom rifle/scope profile editor
+- Session statistics and progress tracking
+- Timed drill modes
