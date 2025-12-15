@@ -20,43 +20,97 @@ bun run dev
 
 Open http://localhost:5173 in your browser.
 
-## Controls
+## Modes
+
+Holdover has two training modes, selectable via the header buttons:
+
+### Scope Mode
+
+Visual holdover practice with a reticle overlay. You see a scope view with target and wind indicators, and use keyboard controls to dial in your hold before firing.
+
+**Controls:**
 
 | Key | Action |
 |-----|--------|
-| W / S | Adjust elevation (0.1 mil per tap) |
-| A / D | Adjust windage (0.1 mil per tap) |
+| W | Hold up (0.1 mil per tap) |
+| S | Hold down (0.1 mil per tap) |
+| A | Hold left (0.1 mil per tap) |
+| D | Hold right (0.1 mil per tap) |
 | Shift + WASD | Coarse adjustment (1.0 mil) |
-| Space | Fire / Next scenario |
 | Hold WASD | Continuous adjustment (~30fps) |
+| Space / Enter | Fire shot |
+| Space / Enter (after shot) | Next scenario |
+| H or ? | Toggle dope card (drop table) |
 
-## Interface
+**Interface:**
 
-### Header
-- **Rifle select** - Choose from preset rifle profiles (6.5 CM, .308, 6mm CM, .300 WM)
-- **Scope select** - Choose reticle pattern (Mil-Dot, Horus H59, Tremor3, MOA)
-- **Magnification** - Slider for scope zoom (FFP reticle scales with magnification)
-- **Known Distance** - Toggle to hide distance for ranging practice
+- **Header**
+  - Rifle select - Choose rifle profile (6.5 CM, .308, 6mm CM, .300 WM)
+  - Scope select - Choose reticle pattern (Mil-Dot, Horus H59, Tremor3, MOA)
+  - Magnification - Slider for scope zoom (FFP reticle scales with mag)
+  - Known Distance - Toggle to hide distance for ranging practice
 
-### Scope View
-- **Top-left**: Distance to target (or "Unknown distance" if toggle off)
-- **Top-right**: Current hold values (Elevation / Windage in mils)
-- **Bottom-left**: Wind flags showing direction and relative speed
-- **Bottom-right**: Wind readings at multiple depths
-- **Center**: Target and reticle overlay
+- **Scope View**
+  - Top-left: Distance to target (or "Unknown distance")
+  - Top-right: Current hold values (E: +X.X | W: +X.X)
+  - Bottom-left: Target type and angle info
+  - Bottom-right: Wind readings at multiple distances
+  - Center: Target silhouette with reticle overlay
 
-### Footer
-- **Before firing**: "SPACE to fire"
-- **After firing**: HIT/MISS status, impact offset, correct hold, your error
+- **Footer**: HIT/MISS result with impact offset, correct solution, and your error
 
-## Training Loop
+**Training Loop:**
 
-1. Scenario generates with random target, distance, wind, and angle
-2. Read wind flags and numbers to estimate crosswind
-3. Use WASD to adjust your holdover (target moves relative to reticle)
-4. Press SPACE to fire
-5. Review feedback: where you hit vs correct hold
-6. Press SPACE for next scenario
+1. Scenario generates with random target, distance (200-1500 yd), wind, and angle
+2. Read wind indicators to estimate required windage
+3. Use WASD to adjust holdover - target moves relative to reticle center
+4. Press Space to fire
+5. Review feedback showing where you hit vs the correct hold
+6. Press Space for next scenario
+
+**Dope Card (H key):**
+
+Shows a drop table for the current rifle at 100-yard increments from 100-1500 yards. Useful for memorizing elevation holds.
+
+---
+
+### Drill Mode
+
+Timed Q&A training for rapid holdover calculation. Given a distance and wind, you type in the correct elevation and windage holds as fast as possible.
+
+**How it works:**
+
+1. Click "Start Drill" to begin a 10-round session
+2. Each round shows:
+   - Target type and size
+   - Distance in yards
+   - Wind speed and clock direction (e.g., "8 mph @ 3 o'clock")
+3. A timer bar counts down from 10 seconds
+4. Enter your holds:
+   - **Left field (L)**: Windage hold left (for wind from the right)
+   - **Center field (up)**: Elevation hold in mils
+   - **Right field (R)**: Windage hold right (for wind from the left)
+5. Press Enter to submit
+6. Feedback shows HIT/MISS with your error and the correct solution
+7. Press Enter to continue to next round
+8. After 10 rounds, see summary: hits, average time, best time
+
+**Windage Input:**
+
+The three-field layout matches how you think about wind:
+- Wind from 3 o'clock (pushing you left) → enter hold in the **Right** field
+- Wind from 9 o'clock (pushing you right) → enter hold in the **Left** field
+- The system calculates net windage as: `right - left`
+
+**Scoring:**
+
+A "hit" requires both elevation AND windage to be within tolerance. Tolerance is based on the target size at the given distance - larger targets at closer range are more forgiving.
+
+**Tips:**
+
+- For 6.5 Creedmoor: elevation ≈ distance/200 (e.g., 800 yd → ~4.0 mils)
+- Wind from 3 or 9 o'clock has full effect; 12 or 6 o'clock has zero effect
+- Quartering winds (1-2, 4-5, 7-8, 10-11 o'clock) have partial effect
 
 ## Mil-Ranging Formula
 
@@ -129,6 +183,9 @@ src/
 ├── ballistics/
 │   ├── index.ts         # Solver, unit conversions
 │   └── drag.ts          # G1/G7 drag model calculations
+├── drill/
+│   ├── index.ts         # Drill mode logic and session management
+│   └── targets.ts       # SVG target definitions
 ├── reticles/
 │   └── index.ts         # Reticle pattern definitions
 ├── scenarios/
@@ -146,4 +203,4 @@ src/
 - More accurate wind flag physics (crosswind component)
 - Custom rifle/scope profile editor
 - Session statistics and progress tracking
-- Timed drill modes
+- Elevation-only drill mode (no wind)
