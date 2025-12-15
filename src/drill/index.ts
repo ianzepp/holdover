@@ -33,14 +33,16 @@ export interface DrillSession {
 
 export interface DrillConfig {
   totalRounds: number
-  timeoutMs: number
+  hopTimeMs: number
+  answerTimeMs: number
   minDistance: number
   maxDistance: number
 }
 
 const DEFAULT_CONFIG: DrillConfig = {
   totalRounds: 10,
-  timeoutMs: 10000,
+  hopTimeMs: 3000,
+  answerTimeMs: 7000,
   minDistance: 200,
   maxDistance: 1500,
 }
@@ -246,9 +248,8 @@ function beginRound(): void {
   }
 
   const round = session.rounds[session.currentRound]
-  session.isActive = true
 
-  // Update display
+  // Update display (show scenario info during hop)
   if (elements.targetEl) elements.targetEl.textContent = round.target.name
   if (elements.distanceEl) elements.distanceEl.textContent = round.distanceYards + ' yd'
   if (elements.windEl) {
@@ -260,7 +261,7 @@ function beginRound(): void {
       elements.windEl.style.display = 'none'
     }
   }
-  if (elements.feedback) elements.feedback.innerHTML = ''
+  if (elements.feedback) elements.feedback.innerHTML = '<div class="continue-hint">Target incoming...</div>'
 
   // Show/hide windage inputs based on wind setting
   if (elements.windageLeftGroup) {
@@ -270,41 +271,63 @@ function beginRound(): void {
     elements.windageRightGroup.style.display = windEnabled ? '' : 'none'
   }
 
-  // Reset inputs
+  // Reset inputs (disabled during hop)
   if (elements.elevationInput) {
     elements.elevationInput.value = ''
-    elements.elevationInput.disabled = false
+    elements.elevationInput.disabled = true
     elements.elevationInput.classList.remove('error')
   }
-  if (windEnabled) {
-    if (elements.windageLeftInput) {
-      elements.windageLeftInput.value = ''
-      elements.windageLeftInput.disabled = false
-      elements.windageLeftInput.classList.remove('error')
-    }
-    if (elements.windageRightInput) {
-      elements.windageRightInput.value = ''
-      elements.windageRightInput.disabled = false
-      elements.windageRightInput.classList.remove('error')
-    }
+  if (elements.windageLeftInput) {
+    elements.windageLeftInput.value = ''
+    elements.windageLeftInput.disabled = true
+    elements.windageLeftInput.classList.remove('error')
+  }
+  if (elements.windageRightInput) {
+    elements.windageRightInput.value = ''
+    elements.windageRightInput.disabled = true
+    elements.windageRightInput.classList.remove('error')
   }
 
-  // Show target visual
-  showTargetVisual(round)
+  // Show target with hop animation
+  const hopDirection = Math.random() < 0.5 ? 'left' : 'right'
+  showTargetVisual(round, hopDirection)
 
-  // Reset timer bar
+  // Reset timer bar (full width during hop phase)
   if (elements.timerBar) {
     elements.timerBar.style.width = '100%'
     elements.timerBar.classList.remove('warning', 'critical')
   }
 
-  // Play beep and start timer
-  playBeep()
-  roundStartTime = performance.now()
-  startTimer()
+  // After hop completes, enable inputs and start answer timer
+  setTimeout(() => {
+    if (!session) return
 
-  // Focus elevation input
-  setTimeout(() => elements.elevationInput?.focus(), 50)
+    session.isActive = true
+
+    // Switch to waggle animation
+    if (elements.targetOutline) {
+      elements.targetOutline.classList.remove('hop-from-left', 'hop-from-right')
+      elements.targetOutline.classList.add('waggle')
+    }
+
+    // Enable inputs
+    if (elements.elevationInput) elements.elevationInput.disabled = false
+    if (windEnabled) {
+      if (elements.windageLeftInput) elements.windageLeftInput.disabled = false
+      if (elements.windageRightInput) elements.windageRightInput.disabled = false
+    }
+
+    // Clear hop message
+    if (elements.feedback) elements.feedback.innerHTML = ''
+
+    // Play beep and start answer timer
+    playBeep()
+    roundStartTime = performance.now()
+    startTimer()
+
+    // Focus elevation input
+    setTimeout(() => elements.elevationInput?.focus(), 50)
+  }, config.hopTimeMs)
 }
 
 function startTimer(): void {
@@ -312,8 +335,8 @@ function startTimer(): void {
 
   timerInterval = window.setInterval(() => {
     const elapsed = performance.now() - startTime
-    const remaining = Math.max(0, config.timeoutMs - elapsed)
-    const percent = (remaining / config.timeoutMs) * 100
+    const remaining = Math.max(0, config.answerTimeMs - elapsed)
+    const percent = (remaining / config.answerTimeMs) * 100
 
     if (elements.timerBar) {
       elements.timerBar.style.width = `${percent}%`
@@ -331,7 +354,7 @@ function startTimer(): void {
 
   timeoutId = window.setTimeout(() => {
     handleTimeout()
-  }, config.timeoutMs)
+  }, config.answerTimeMs)
 }
 
 function stopTimer(): void {
@@ -356,7 +379,7 @@ function handleTimeout(): void {
   round.elevationHit = false
   round.windageHit = false
   round.isHit = false
-  round.responseTimeMs = config.timeoutMs
+  round.responseTimeMs = config.answerTimeMs
 
   // Show feedback and impact
   showFeedback(round, true)
@@ -463,7 +486,7 @@ function advanceRound(): void {
 // Visual target scale: pixels per inch at a reference size
 const TARGET_VISUAL_SCALE = 3
 
-function showTargetVisual(round: DrillRound): void {
+function showTargetVisual(round: DrillRound, hopDirection?: 'left' | 'right'): void {
   if (!elements.targetOutline || !elements.targetImpact) return
 
   const { target } = round
@@ -496,6 +519,12 @@ function showTargetVisual(round: DrillRound): void {
   elements.targetImpact.className = 'target-impact'
   elements.targetImpact.style.left = ''
   elements.targetImpact.style.top = ''
+
+  // Apply hop animation if direction specified
+  elements.targetOutline.classList.remove('waggle', 'hop-from-left', 'hop-from-right')
+  if (hopDirection) {
+    elements.targetOutline.classList.add(hopDirection === 'left' ? 'hop-from-left' : 'hop-from-right')
+  }
 }
 
 function showImpact(round: DrillRound, timedOut: boolean): void {

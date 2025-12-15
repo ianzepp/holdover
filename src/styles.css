@@ -380,13 +380,44 @@ main {
   background: #3a3a3a;
   border: 2px solid #666;
   border-radius: 2px;
-  animation: waggle 2s ease-in-out infinite;
   transform-origin: center bottom;
+}
+
+.target-outline.waggle {
+  animation: waggle 2s ease-in-out infinite;
+}
+
+.target-outline.hop-from-left {
+  animation: hop-from-left 3s ease-out forwards;
+}
+
+.target-outline.hop-from-right {
+  animation: hop-from-right 3s ease-out forwards;
 }
 
 @keyframes waggle {
   0%, 100% { transform: rotate(-2deg); }
   50% { transform: rotate(2deg); }
+}
+
+@keyframes hop-from-left {
+  0% { transform: translateX(-300px) rotate(-15deg); opacity: 0; }
+  20% { opacity: 1; }
+  30% { transform: translateX(-100px) rotate(8deg); }
+  50% { transform: translateX(-30px) rotate(-5deg); }
+  70% { transform: translateX(10px) rotate(3deg); }
+  85% { transform: translateX(-5px) rotate(-2deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+
+@keyframes hop-from-right {
+  0% { transform: translateX(300px) rotate(15deg); opacity: 0; }
+  20% { opacity: 1; }
+  30% { transform: translateX(100px) rotate(-8deg); }
+  50% { transform: translateX(30px) rotate(5deg); }
+  70% { transform: translateX(-10px) rotate(-3deg); }
+  85% { transform: translateX(5px) rotate(2deg); }
+  100% { transform: translateX(0) rotate(0deg); }
 }
 
 .target-impact {
