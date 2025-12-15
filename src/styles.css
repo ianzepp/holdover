@@ -541,6 +541,32 @@ main {
 
 .drill-start {
   margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.drill-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.drill-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.drill-toggle-label {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.drill-toggle input:checked + .drill-toggle-label {
+  color: #fff;
 }
 
 .start-btn {

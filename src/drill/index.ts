@@ -51,6 +51,7 @@ let roundStartTime: number = 0
 let timerInterval: number | null = null
 let timeoutId: number | null = null
 let audioContext: AudioContext | null = null
+let windEnabled: boolean = true
 
 // DOM element references
 let elements: {
@@ -72,6 +73,8 @@ let elements: {
   summaryBestTime: HTMLElement | null
   targetOutline: HTMLElement | null
   targetImpact: HTMLElement | null
+  windageLeftGroup: HTMLElement | null
+  windageRightGroup: HTMLElement | null
 } = {
   rifleEl: null,
   targetEl: null,
@@ -91,6 +94,8 @@ let elements: {
   summaryBestTime: null,
   targetOutline: null,
   targetImpact: null,
+  windageLeftGroup: null,
+  windageRightGroup: null,
 }
 
 export function initDrill(): void {
@@ -113,6 +118,8 @@ export function initDrill(): void {
     summaryBestTime: document.getElementById('summary-best-time'),
     targetOutline: document.getElementById('target-outline'),
     targetImpact: document.getElementById('target-impact'),
+    windageLeftGroup: document.getElementById('drill-windage-left-group'),
+    windageRightGroup: document.getElementById('drill-windage-right-group'),
   }
 
   document.getElementById('start-drill-btn')?.addEventListener('click', startDrill)
@@ -144,9 +151,9 @@ function generateRound(rifle: RifleProfile): DrillRound {
   const rawDistance = random(config.minDistance, config.maxDistance)
   const distance = Math.round(rawDistance / 25) * 25
 
-  // Generate wind (0-15 mph, random clock direction)
-  const windSpeedMPH = random(0, 15)
-  const windDirectionClock = randomInt(1, 12)
+  // Generate wind (0-15 mph, random clock direction) - skip if wind disabled
+  const windSpeedMPH = windEnabled ? random(0, 15) : 0
+  const windDirectionClock = windEnabled ? randomInt(1, 12) : 12
 
   // Create wind vector for ballistics calc
   const windVector = {
@@ -158,7 +165,7 @@ function generateRound(rifle: RifleProfile): DrillRound {
   // Calculate correct holdover with wind
   const solution = solve(rifle, distance, 0, [windVector], DEFAULT_ENVIRONMENT)
   const correctElevation = -solution.dropMils
-  const correctWindage = solution.windDriftMils
+  const correctWindage = windEnabled ? solution.windDriftMils : 0
 
   // Calculate tolerances based on target size at distance
   const targetHeightMils = (target.heightInches / (distance * 36)) * 1000
@@ -191,6 +198,10 @@ export function startDrill(): void {
 
   const rifle = getRifleByName(rifleName)
   if (!rifle) return
+
+  // Read wind toggle
+  const windToggle = document.getElementById('drill-wind-toggle') as HTMLInputElement
+  windEnabled = windToggle?.checked ?? true
 
   // Reset session
   session = {
@@ -241,9 +252,23 @@ function beginRound(): void {
   if (elements.targetEl) elements.targetEl.textContent = round.target.name
   if (elements.distanceEl) elements.distanceEl.textContent = round.distanceYards + ' yd'
   if (elements.windEl) {
-    elements.windEl.textContent = Math.round(round.windSpeedMPH) + ' mph @ ' + formatWindDirection(round.windDirectionClock)
+    if (windEnabled) {
+      elements.windEl.textContent = Math.round(round.windSpeedMPH) + ' mph @ ' + formatWindDirection(round.windDirectionClock)
+      elements.windEl.style.display = ''
+    }
+    else {
+      elements.windEl.style.display = 'none'
+    }
   }
   if (elements.feedback) elements.feedback.innerHTML = ''
+
+  // Show/hide windage inputs based on wind setting
+  if (elements.windageLeftGroup) {
+    elements.windageLeftGroup.style.display = windEnabled ? '' : 'none'
+  }
+  if (elements.windageRightGroup) {
+    elements.windageRightGroup.style.display = windEnabled ? '' : 'none'
+  }
 
   // Reset inputs
   if (elements.elevationInput) {
@@ -251,15 +276,17 @@ function beginRound(): void {
     elements.elevationInput.disabled = false
     elements.elevationInput.classList.remove('error')
   }
-  if (elements.windageLeftInput) {
-    elements.windageLeftInput.value = ''
-    elements.windageLeftInput.disabled = false
-    elements.windageLeftInput.classList.remove('error')
-  }
-  if (elements.windageRightInput) {
-    elements.windageRightInput.value = ''
-    elements.windageRightInput.disabled = false
-    elements.windageRightInput.classList.remove('error')
+  if (windEnabled) {
+    if (elements.windageLeftInput) {
+      elements.windageLeftInput.value = ''
+      elements.windageLeftInput.disabled = false
+      elements.windageLeftInput.classList.remove('error')
+    }
+    if (elements.windageRightInput) {
+      elements.windageRightInput.value = ''
+      elements.windageRightInput.disabled = false
+      elements.windageRightInput.classList.remove('error')
+    }
   }
 
   // Show target visual
@@ -364,10 +391,13 @@ function submitAnswer(): void {
     return
   }
 
-  // Combine windage: left is negative, right is positive
-  const leftVal = parseFloat(windageLeftValue || '0') || 0
-  const rightVal = parseFloat(windageRightValue || '0') || 0
-  const userWindage = rightVal - leftVal
+  // Combine windage: left is negative, right is positive (skip if wind disabled)
+  let userWindage = 0
+  if (windEnabled) {
+    const leftVal = parseFloat(windageLeftValue || '0') || 0
+    const rightVal = parseFloat(windageRightValue || '0') || 0
+    userWindage = rightVal - leftVal
+  }
 
   stopTimer()
   session.isActive = false
@@ -381,10 +411,16 @@ function submitAnswer(): void {
 
   // Check if hits (within tolerance for each)
   const elevationError = Math.abs(userElevation - round.correctElevation)
-  const windageError = Math.abs(userWindage - round.correctWindage)
-
   round.elevationHit = elevationError <= round.toleranceElevation
-  round.windageHit = windageError <= round.toleranceWindage
+
+  // Windage auto-passes when wind is disabled
+  if (windEnabled) {
+    const windageError = Math.abs(userWindage - round.correctWindage)
+    round.windageHit = windageError <= round.toleranceWindage
+  }
+  else {
+    round.windageHit = true
+  }
   round.isHit = round.elevationHit && round.windageHit
 
   // Show feedback and impact
@@ -532,9 +568,12 @@ function showFeedback(round: DrillRound, timedOut: boolean): void {
   const continueHint = '<div class="continue-hint">Press Enter to continue</div>'
 
   if (timedOut) {
+    const correctStr = windEnabled
+      ? round.correctElevation.toFixed(1) + ' up / ' + round.correctWindage.toFixed(1) + ' right'
+      : round.correctElevation.toFixed(1) + ' up'
     elements.feedback.innerHTML =
       '<div class="timeout">TIMEOUT</div>' +
-      '<div class="answer-detail">Correct: ' + round.correctElevation.toFixed(1) + ' up / ' + round.correctWindage.toFixed(1) + ' right</div>' +
+      '<div class="answer-detail">Correct: ' + correctStr + '</div>' +
       continueHint
   }
   else {
@@ -546,13 +585,13 @@ function showFeedback(round: DrillRound, timedOut: boolean): void {
 
     if (!round.isHit) {
       resultClass = 'incorrect'
-      if (!round.elevationHit && !round.windageHit) {
+      if (windEnabled && !round.elevationHit && !round.windageHit) {
         resultText = 'MISS (elev + wind)'
       }
       else if (!round.elevationHit) {
         resultText = 'MISS (elevation)'
       }
-      else {
+      else if (windEnabled) {
         resultText = 'MISS (windage)'
       }
     }
@@ -564,17 +603,25 @@ function showFeedback(round: DrillRound, timedOut: boolean): void {
       ? '<span class="hit">E: ' + round.userElevation!.toFixed(1) + '</span>'
       : '<span class="miss">E: ' + round.userElevation!.toFixed(1) + ' (' + Math.abs(elevError).toFixed(1) + ' ' + elevDir + ')</span>'
 
-    // Windage detail
-    const windError = round.userWindage! - round.correctWindage
-    const windDir = windError > 0 ? 'R' : 'L'
-    const windDetail = round.windageHit
-      ? '<span class="hit">W: ' + round.userWindage!.toFixed(1) + '</span>'
-      : '<span class="miss">W: ' + round.userWindage!.toFixed(1) + ' (' + Math.abs(windError).toFixed(1) + ' ' + windDir + ')</span>'
+    // Windage detail (only when wind enabled)
+    let answerDetail = elevDetail
+    if (windEnabled) {
+      const windError = round.userWindage! - round.correctWindage
+      const windDir = windError > 0 ? 'R' : 'L'
+      const windDetail = round.windageHit
+        ? '<span class="hit">W: ' + round.userWindage!.toFixed(1) + '</span>'
+        : '<span class="miss">W: ' + round.userWindage!.toFixed(1) + ' (' + Math.abs(windError).toFixed(1) + ' ' + windDir + ')</span>'
+      answerDetail += ' | ' + windDetail
+    }
+
+    const correctStr = windEnabled
+      ? round.correctElevation.toFixed(1) + ' up / ' + round.correctWindage.toFixed(1) + ' right'
+      : round.correctElevation.toFixed(1) + ' up'
 
     elements.feedback.innerHTML =
       '<div class="' + resultClass + '">' + resultText + ' - ' + timeStr + 's</div>' +
-      '<div class="answer-detail">' + elevDetail + ' | ' + windDetail + '</div>' +
-      '<div class="answer-detail">Correct: ' + round.correctElevation.toFixed(1) + ' up / ' + round.correctWindage.toFixed(1) + ' right</div>' +
+      '<div class="answer-detail">' + answerDetail + '</div>' +
+      '<div class="answer-detail">Correct: ' + correctStr + '</div>' +
       continueHint
   }
 }

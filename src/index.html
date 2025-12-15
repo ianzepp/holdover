@@ -76,7 +76,7 @@
           </div>
 
           <div class="drill-input-area">
-            <div class="drill-input-group">
+            <div class="drill-input-group" id="drill-windage-left-group">
               <input
                 type="text"
                 id="drill-windage-left"
@@ -98,7 +98,7 @@
               >
               <span class="drill-unit">up</span>
             </div>
-            <div class="drill-input-group">
+            <div class="drill-input-group" id="drill-windage-right-group">
               <input
                 type="text"
                 id="drill-windage-right"
@@ -119,6 +119,10 @@
           </div>
 
           <div class="drill-start" id="drill-start">
+            <label class="drill-toggle">
+              <input type="checkbox" id="drill-wind-toggle" checked>
+              <span class="drill-toggle-label">Include Wind</span>
+            </label>
             <button id="start-drill-btn" class="start-btn">Start Drill</button>
           </div>
 
